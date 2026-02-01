@@ -1,28 +1,23 @@
 import { useState } from 'react';
-import api from '../lib/api';
 import { useNavigate } from 'react-router-dom';
+import { useLogin } from '../hooks/useAuth';
 
 export default function Login() {
   const [emailOrUsername, setEmailOrUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  const mutation = useLogin();
+
   async function submit(e: any) {
     e.preventDefault();
-    setLoading(true);
     setError(null);
-
     try {
-      const res = await api.post('/auth/login', { emailOrUsername, password });
-      const token = res.data.token;
-      localStorage.setItem('carknow_token', token);
+      await mutation.mutateAsync({ emailOrUsername, password });
       navigate('/');
     } catch (err: any) {
       setError(err?.response?.data?.error || err.message || 'Login failed');
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -46,8 +41,8 @@ export default function Login() {
           required
         />
         {error && <div className="text-red-600">{error}</div>}
-        <button type="submit" className="bg-indigo-600 text-white px-4 py-2 rounded" disabled={loading}>
-          {loading ? 'Logging in...' : 'Login'}
+        <button type="submit" className="bg-indigo-600 text-white px-4 py-2 rounded" disabled={mutation.isLoading}>
+          {mutation.isLoading ? 'Logging in...' : 'Login'}
         </button>
       </form>
     </div>
