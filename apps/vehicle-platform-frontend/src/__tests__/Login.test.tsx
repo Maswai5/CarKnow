@@ -8,10 +8,17 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 vi.mock('../lib/api', () => ({ default: { post: vi.fn() } }));
 
+import { cleanup } from '@testing-library/react';
+
 function renderWithProviders(ui: React.ReactElement) {
-  const qc = new QueryClient();
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  qc.mount();
   return render(<QueryClientProvider client={qc}><MemoryRouter>{ui}</MemoryRouter></QueryClientProvider>);
 }
+
+afterEach(() => {
+  cleanup();
+});
 
 describe('Login', () => {
   beforeEach(() => {
