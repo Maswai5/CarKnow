@@ -5,7 +5,7 @@ import VehicleLookup from '../pages/VehicleLookup';
 import api from '../lib/api';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-vi.mock('../lib/api', () => ({ get: vi.fn() }));
+vi.mock('../lib/api', () => ({ default: { get: vi.fn() } }));
 
 function renderWithProviders(ui: React.ReactElement) {
   const qc = new QueryClient();

@@ -5,7 +5,7 @@ import Login from '../pages/Login';
 import api from '../lib/api';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-vi.mock('../lib/api', () => ({ post: vi.fn() }));
+vi.mock('../lib/api', () => ({ default: { post: vi.fn() } }));
 
 function renderWithProviders(ui: React.ReactElement) {
   const qc = new QueryClient();
