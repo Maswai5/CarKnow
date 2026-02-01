@@ -8,6 +8,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 vi.mock('../lib/api', () => ({ default: { post: vi.fn() } }));
 
+const mockMutate = vi.fn();
+vi.mock('../hooks/useAuth', () => ({ useLogin: () => ({ mutateAsync: mockMutate, isLoading: false }) }));
+
 import { cleanup } from '@testing-library/react';
 
 function renderWithProviders(ui: React.ReactElement) {
@@ -24,10 +27,15 @@ describe('Login', () => {
   beforeEach(() => {
     localStorage.clear();
     (api.post as any).mockReset();
+    mockMutate.mockReset();
   });
 
   it('successful login sets token', async () => {
-    (api.post as any).mockResolvedValue({ data: { token: 'test-token' } });
+    mockMutate.mockImplementation(async () => {
+      // simulate the hook storing the token like the real hook does
+      localStorage.setItem('carknow_token', 'test-token');
+      return { token: 'test-token' };
+    });
 
     renderWithProviders(<Login />);
 
@@ -36,10 +44,13 @@ describe('Login', () => {
     fireEvent.click(screen.getByRole('button', { name: /login/i }));
 
     await waitFor(() => expect(localStorage.getItem('carknow_token')).toBe('test-token'));
+    expect(mockMutate).toHaveBeenCalled();
   });
 
   it('shows error when login fails', async () => {
-    (api.post as any).mockRejectedValue(new Error('Invalid creds'));
+    mockMutate.mockImplementation(async () => {
+      throw new Error('Invalid creds');
+    });
 
     renderWithProviders(<Login />);
 
@@ -48,5 +59,6 @@ describe('Login', () => {
     fireEvent.click(screen.getByRole('button', { name: /login/i }));
 
     await waitFor(() => expect(screen.getByText(/login failed|invalid creds/i)).toBeTruthy());
+    expect(mockMutate).toHaveBeenCalled();
   });
 });
