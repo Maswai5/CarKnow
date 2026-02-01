@@ -1,0 +1,68 @@
+const bcrypt = require("bcryptjs");
+const { Pool } = require("pg");
+
+// Create a single pool connection
+const pool = new Pool({
+  user: "postgres",          // 👈 replace with your actual Postgres username
+  host: "localhost",         // or "127.0.0.1"
+  database: "vehicle_platform", // 👈 make sure this DB exists
+  password: "sikuambi",      // 👈 your actual Postgres password
+  port: 5432,
+});
+
+async function seedUsers() {
+  const users = [
+    { username: "admin", email: "admin@vhp.ke", password: "admin123", role: "admin" },
+    { username: "buyer", email: "buyer@vhp.ke", password: "buyer123", role: "buyer" },
+    { username: "garage", email: "garage@vhp.ke", password: "garage123", role: "garage" },
+    { username: "user1", email: "user@example.com", password: "password123", role: "user" },
+    { username: "admin1", email: "admin@example.com", password: "password123", role: "admin" },
+    { username: "superadmin1", email: "superadmin@example.com", password: "password123", role: "superadmin" },
+    { username: "auctioneer1", email: "auctioneer@example.com", password: "auction123", role: "auctioneer" },
+    { username: "bidder1", email: "bidder@example.com", password: "bidder123", role: "bidder" },
+  ];
+
+  for (const user of users) {
+    // Hash the plain password before inserting
+    const hashed = await bcrypt.hash(user.password, 10);
+
+    await pool.query(
+      `INSERT INTO users (username, email, password, role)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (email) DO NOTHING`,
+      [user.username, user.email, hashed, user.role]
+    );
+
+    console.log(`Seeded: ${user.email}`);
+  }
+
+  // Insert a sample car
+  await pool.query(
+    `INSERT INTO cars (vin, make, model, year, mileage, status)
+     VALUES ($1, $2, $3, $4, $5, $6)
+     ON CONFLICT DO NOTHING`,
+    ['1HGCM82633A123456', 'Toyota', 'Camry', 2020, 50000, 'available']
+  );
+  console.log('Sample car inserted');
+
+  // Get auctioneer id and assign ownership
+  const auctioneer = await pool.query('SELECT id, username FROM users WHERE email = $1', ['auctioneer@example.com']);
+  if (auctioneer.rows.length > 0) {
+    const car = await pool.query('SELECT id FROM cars WHERE vin = $1', ['1HGCM82633A123456']);
+    if (car.rows.length > 0) {
+      await pool.query(
+        `INSERT INTO ownerships (car_id, owner_id, owner_name, transfer_date, mileage)
+         VALUES ($1, $2, $3, NOW(), $4)
+         ON CONFLICT DO NOTHING`,
+        [car.rows[0].id, auctioneer.rows[0].id, auctioneer.rows[0].username, 50000]
+      );
+      console.log('Ownership assigned to auctioneer');
+    }
+  }
+
+  console.log("✅ All users and sample data seeded with hashed passwords");
+  await pool.end(); // 👈 close connection cleanly
+  process.exit();
+}
+
+seedUsers();
