@@ -46,7 +46,8 @@
   },
   "vitest": {
     "test": {
-      "environment": "jsdom"
+      "environment": "jsdom",
+      "setupFiles": "./src/setupTests.ts"
     }
   },
   "overrides": {
