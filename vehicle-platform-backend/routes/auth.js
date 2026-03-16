@@ -64,55 +64,6 @@ router.post('/signup', async (req, res) => {
   }
 });
 
-// Login (JWT includes role for RBAC)
-router.post('/login', async (req, res) => {
-  const { emailOrUsername, password } = req.body;
-  try {
-    const lookup = (emailOrUsername || '').toLowerCase();
-    const result = await pool.query(
-      `SELECT * FROM users WHERE LOWER(email) = $1 OR LOWER(username) = $1`,
-      [lookup]
-    );
-
-    console.log("DB result:", result.rows);
-
-    if (result.rows.length === 0) return res.status(401).json({ error: 'Invalid credentials' });
-
-    const user = result.rows[0];
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
-
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-
-    //await sendPaymentEmail({
-      //to: user.email,
-      //subject: 'Your login token',
-      //text: `Here is your login token: ${token}`,
-     // html: `<p>Your login token:</p><pre>${token}</pre>`
-    // });
-     
-     //if (user.phone) {
-      //await sendSMS(user.phone, `Your login token: ${token}`);
-     //}
-
-     if (!user.email && !user.phone) {
-       return res.status(400).json({ error: 'No delivery method available for token' });
-    }
-
-    res.status(200).json({
-      message: 'Login successful',
-      token, // <-- include the JWT in the response
-      role: user.role // optional: makes RBAC easier on frontend
-    });
-  } catch (err) {
-    console.error('Login error:', err.message);
-    res.status(500).json({ error: 'Server error during login' });
-  }
-});
 
 // Login (JWT includes role for RBAC)
 router.post("/login", async (req, res) => {

@@ -30,13 +30,14 @@ export function decodeTokenRole(token: string | null): { role?: string; email?: 
 }
 
 export function useLogin() {
-  return useMutation(async (data: LoginPayload) => {
-    const res = await api.post('/auth/login', data);
-    const token = res.data.token;
-    if (!token) throw new Error('No token returned');
-    setToken(token);
-    return res.data;
-  }, {
+  return useMutation({
+    mutationFn: async (data: LoginPayload) => {
+      const res = await api.post('/auth/login', data);
+      const token = res.data.token;
+      if (!token) throw new Error('No token returned');
+      setToken(token);
+      return res.data;
+    },
     retry: 1
   });
 }
