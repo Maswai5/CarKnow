@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import './App.css';
 import VehicleLookup from './pages/VehicleLookup';
 import Login from './pages/Login';
+import CarGallery from './components/CarGallery';
 
 function App() {
   return (
@@ -20,10 +21,13 @@ function App() {
 
         <main className="max-w-4xl mx-auto p-6">
           <Routes>
-            <Route path="/" element={<div className="text-center py-20">
-              <h2 className="text-3xl font-semibold mb-4">Welcome to CarKnow</h2>
-              <p className="text-gray-600">A fresh frontend connected to your backend for vehicle lookups and payments.</p>
-            </div>} />
+            <Route path="/" element={
+              <div className="text-center py-20">
+                <h2 className="text-3xl font-semibold mb-4">Welcome to CarKnow</h2>
+                <p className="text-gray-600 mb-8">A fresh frontend connected to your backend for vehicle lookups and payments.</p>
+                <CarGallery />
+              </div>
+            } />
             <Route path="/lookup" element={<VehicleLookup />} />
             <Route path="/login" element={<Login />} />
           </Routes>
